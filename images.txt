@@ -1,1 +1,1 @@
-minio/mc:RELEASE.2025-07-21T05-28-08Z
+starrocks/allin1-ubuntu:3.5.6
