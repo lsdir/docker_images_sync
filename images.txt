@@ -1,1 +1,1 @@
-starrocks/allin1-ubuntu:3.5.6
+apache/fluss:0.9.0-incubating
