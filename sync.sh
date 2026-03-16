@@ -22,32 +22,26 @@ fi
 
 failed_count=0
 failed_images=""
+
+resolve_target_name() {
+    local image="$1"
+    local image_without_digest="${image%%@*}"
+    local last_part="${image_without_digest##*/}"
+    printf "%s/%s/%s" "$TARGET_REGISTRY" "$TARGET_NAMESPACE" "$last_part"
+}
+
 while IFS= read -r image; do
-    # 拉取镜像
+    [ -z "$image" ] && continue
+
+    targetFullName=$(resolve_target_name "$image")
+
+    # 直接复制 manifest list，保留全部架构而不是仅同步 runner 当前架构
     set +e
-    docker pull "$image"
-    pull_status=$?
-    if [ $pull_status -ne 0 ]; then
-        echo "Error: Failed to pull image $image, continuing..."
-        failed_count=$((failed_count + 1))
-        failed_images="${failed_images} ${image}"
-        continue
-    fi
-
-    name=$(echo "${image}" | cut -d '/' -f2)
-    tag=$(echo "${name}" | cut -d ':' -f2)
-    targetFullName=${TARGET_REGISTRY}/${TARGET_NAMESPACE}/${name}
-
-    # 打阿里云的tag
-    docker tag "${image}" "${targetFullName}"
-    tag_status=$?
-
-    # 推送到阿里云
-    set +e
-    docker push "${targetFullName}"
-    push_status=$?
-    if [ $push_status -ne 0 ]; then
-        echo "Error: Failed to push image $targetFullName, continuing..."
+    docker buildx imagetools create --tag "$targetFullName" "$image"
+    sync_status=$?
+    set -e
+    if [ $sync_status -ne 0 ]; then
+        echo "Error: Failed to sync image $image to $targetFullName, continuing..."
         failed_count=$((failed_count + 1))
         failed_images="${failed_images} ${image}"
         continue
