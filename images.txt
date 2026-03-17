@@ -1,1 +1,1 @@
-keycloak/keycloak:latest
+redis:latest
