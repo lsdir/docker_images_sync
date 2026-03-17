@@ -1,1 +1,1 @@
-zookeeper:3.9.3
+starrocks/allin1-ubuntu:3.5.6
